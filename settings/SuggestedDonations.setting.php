@@ -1,0 +1,40 @@
+<?php
+
+return array(
+  'sd_increments' => array(
+    'title' => 'Suggested Donations: Increments',
+    'group_name' => 'Suggested Donations',
+    'group' => 'suggesteddonations',
+    'name' => 'sd_increments',
+    'type' => 'String',
+    'default' => '10,20',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => 'Comma-separated list of numeric values representing the increments above the largest past donation for which you want tokens generated.',
+    'help_text' => '',
+  ),
+  'sd_financialtypes' => array(
+    'title' => 'Suggested Donations: Financial Types',
+    'group_name' => 'Suggested Donations',
+    'group' => 'suggesteddonations',
+    'name' => 'sd_financialtypes',
+    'type' => 'String',
+    'default' => '1',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => 'Comma-separated list of Financial Type IDs to restrict the largest donation retrieval by.',
+    'help_text' => '',
+  ),
+  'sd_defaultamt' => array(
+    'title' => 'Suggested Donations: Default Amount',
+    'group_name' => 'Suggested Donations',
+    'group' => 'suggesteddonations',
+    'name' => 'sd_defaultamt',
+    'type' => 'String',
+    'default' => 50,
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => 'Default amount if no past contribution is found.',
+    'help_text' => '',
+  ),
+);

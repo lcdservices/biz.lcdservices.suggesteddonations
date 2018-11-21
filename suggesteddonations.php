@@ -149,15 +149,84 @@ function suggesteddonations_civicrm_preProcess($formName, &$form) {
  * Implements hook_civicrm_navigationMenu().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_navigationMenu
- *
+ */
 function suggesteddonations_civicrm_navigationMenu(&$menu) {
-  _suggesteddonations_civix_insert_navigation_menu($menu, 'Mailings', array(
-    'label' => E::ts('New subliminal message'),
-    'name' => 'mailing_subliminal_message',
-    'url' => 'civicrm/mailing/subliminal',
-    'permission' => 'access CiviMail',
+  _suggesteddonations_civix_insert_navigation_menu($menu, 'Administer', array(
+    'label' => E::ts('Suggested Donation Settings'),
+    'name' => 'suggested_donation_settings',
+    'url' => 'civicrm/admin/setting/suggesteddonation',
+    'permission' => 'administer CiviCRM',
     'operator' => 'OR',
     'separator' => 0,
   ));
   _suggesteddonations_civix_navigationMenu($menu);
 } // */
+
+function suggesteddonations_civicrm_tokens(&$tokens) {
+  $tokens['suggesteddonations'] = array(
+    'suggesteddonations.largest' => ts("Largest Donation"),
+  );
+
+  $increments = Civi::settings()->get('sd_increments');
+  foreach (explode(',', $increments) as $increment) {
+    //ensure we have a numeric value
+    if (is_numeric($increment)) {
+      $tokens['suggesteddonations']['suggesteddonations.largest'.$increment] = ts('Largest Donation + ').$increment;
+    }
+  }
+}
+
+function suggesteddonations_civicrm_tokenValues(&$values, $cids, $job = null, $tokens = array(), $context = null) {
+  //Civi::log()->debug('', ['$tokens' => $tokens, '$values' => $values]);
+
+  if (!empty($tokens['suggesteddonations'])) {
+    //TODO better validation of increments and fts...
+    $increments = explode(',', Civi::settings()->get('sd_increments'));
+    $increments = array_map('trim', $increments);
+
+    $fts = Civi::settings()->get('sd_financialtypes');
+    $fts = (!is_array($fts)) ? array($fts) : $fts;
+    $fts = implode(',', $fts);
+
+    $defaultAmt = Civi::settings()->get('sd_defaultamt');
+
+    /*Civi::log()->debug('', [
+      'increments' => $increments,
+      'sd_financialtypes' => Civi::settings()->get('sd_financialtypes'),
+      'fts' => $fts,
+      'defaultAmt' => $defaultAmt,
+    ]);*/
+
+    foreach ($cids as $cid) {
+      //get largest past donation
+      $largest = CRM_Core_DAO::singleValueQuery("
+        SELECT MAX(total_amount)
+        FROM civicrm_contribution
+        WHERE contact_id = %1
+          AND financial_type_id IN (%2)
+      ", [
+        1 => [$cid, 'Positive'],
+        2 => [$fts, 'String'],
+      ]);
+
+      if (empty($largest)) {
+        $largest = $defaultAmt;
+      }
+
+      //set largest
+      $values[$cid]['suggesteddonations.largest'] = $largest;
+      $values[$cid]['largest'] = $largest;
+
+      foreach ($increments as $increment) {
+        if (is_numeric($increment)) {
+          $tokens['suggesteddonations']['suggesteddonations.largest+'.$increment] = ts('Largest Previous Donation + ').$increment;
+
+          $amt = number_format($largest * (1 + $increment * 0.01), 2);
+          $key = 'largest'.$increment;
+          $values[$cid]["suggesteddonations.{$key}"] = $amt;
+          $values[$cid][$key] = $amt;
+        }
+      }
+    }
+  }
+}
