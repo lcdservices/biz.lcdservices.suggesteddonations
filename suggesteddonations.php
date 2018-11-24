@@ -214,14 +214,14 @@ function suggesteddonations_civicrm_tokenValues(&$values, $cids, $job = null, $t
       }
 
       //set largest
-      $values[$cid]['suggesteddonations.largest'] = $largest;
+      $values[$cid]['suggesteddonations.largest'] = number_format($largest, 0);
       $values[$cid]['largest'] = $largest;
 
       foreach ($increments as $increment) {
         if (is_numeric($increment)) {
           $tokens['suggesteddonations']['suggesteddonations.largest+'.$increment] = ts('Largest Previous Donation + ').$increment;
 
-          $amt = number_format($largest * (1 + $increment * 0.01), 2);
+          $amt = number_format($largest * (1 + $increment * 0.01), 0);
           $key = 'largest'.$increment;
           $values[$cid]["suggesteddonations.{$key}"] = $amt;
           $values[$cid][$key] = $amt;
